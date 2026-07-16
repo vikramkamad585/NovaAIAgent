@@ -19,7 +19,7 @@
   if (!script) return;
 
   var userId = script.getAttribute("data-user-id");
-  var apiBase = (script.getAttribute("data-api") || "http://localhost:8000").replace(/\/$/, "");
+  var apiBase = (script.getAttribute("data-api") || "https://novaaiagentserver.onrender.com").replace(/\/$/, "");
   if (!userId) {
     console.warn("[NovaAI] Missing data-user-id on assistant script.");
     return;
