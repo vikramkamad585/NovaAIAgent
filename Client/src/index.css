@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/* Show a pointer cursor on all interactive elements (Tailwind v4 defaults
+   buttons to the arrow cursor). Disabled buttons show "not-allowed". */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+a[href],
+label[for],
+summary,
+select {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+/* Subtle dotted background pattern for hero/marketing sections */
+.bg-dots {
+  background-image: radial-gradient(circle at 1px 1px, rgba(99, 102, 241, 0.12) 1px, transparent 0);
+  background-size: 26px 26px;
+}
+
+/* Faint grid pattern */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(120, 90, 200, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(120, 90, 200, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Gentle floating motion for decorative blobs */
+@keyframes float-slow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(0, -18px) scale(1.04); }
+}
+
+/* Fade/rise in on mount */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Slow breathing pulse for the assistant orb */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+/* Soft expanding glow ring behind the orb */
+@keyframes glow-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* Equalizer wave bars */
+@keyframes wave {
+  0%, 100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
