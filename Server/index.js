@@ -26,7 +26,7 @@ app.use("/api/widget", widgetCors, widgetRouter)
 
 // Strict CORS for the authenticated app (cookie/JWT), only the trusted frontend.
 app.use(cors({
-    origin:"http://localhost:5173",
+    origin:"https://novaai-xpbr.onrender.com",
     credentials:true
 }))
 
