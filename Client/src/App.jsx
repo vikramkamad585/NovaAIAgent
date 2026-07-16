@@ -11,7 +11,7 @@ import Billing from "./pages/Billing"
 import {Toaster} from 'react-hot-toast'
 
 export const ServerUrl = "https://novaaiagentserver.onrender.com"
-export const CLIENT_URL = "http://localhost:5173"
+export const CLIENT_URL = "https://novaai-xpbr.onrender.com"
 
 function App(){
 
