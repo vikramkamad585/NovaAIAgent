@@ -10,8 +10,10 @@ import Builder from "./pages/Builder"
 import Billing from "./pages/Billing"
 import {Toaster} from 'react-hot-toast'
 
-export const ServerUrl = "https://novaaiagentserver.onrender.com"
-export const CLIENT_URL = "https://novaai-xpbr.onrender.com"
+// Env-driven URLs: falls back to localhost in dev, uses VITE_* vars in production
+// (see .env.production). VITE_ vars are inlined by Vite at build time.
+export const ServerUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8000"
+export const CLIENT_URL = import.meta.env.VITE_CLIENT_URL || "http://localhost:5173"
 
 function App(){
 
@@ -23,9 +25,14 @@ function App(){
       try{
         const res = await axios.get(ServerUrl + "/api/user/current-user", {withCredentials:true})
         setUser(res.data)
-        setLoading(false)
       }catch(error){
-        console.log("error",error)
+        // 400/401 here just means "not logged in yet" — expected, not an error.
+        const status = error?.response?.status
+        if (status !== 400 && status !== 401) {
+          console.log("current-user error", error)
+        }
+        setUser(null)
+      }finally{
         setLoading(false)
       }
     }

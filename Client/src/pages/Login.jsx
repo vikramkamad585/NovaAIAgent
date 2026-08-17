@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { signInWithPopup } from 'firebase/auth'
 import { auth, provider } from "../utils/firebase.js"
 import axios from 'axios'
@@ -65,9 +65,11 @@ function GoogleIcon() {
 function Login({setUser}) {
 
 const navigate = useNavigate()
+const [loading, setLoading] = useState(false)
 
 const handleLogin = async () => {
     try{
+        setLoading(true)
         const result = await signInWithPopup(auth, provider)
         const {displayName, email} = result.user
         const res = await axios.post(ServerUrl + "/api/auth/google", {name: displayName, email}, {withCredentials:true})
@@ -75,12 +77,33 @@ const handleLogin = async () => {
         toast.success('Login Successfully.')
         navigate('/')
     }catch(error){
-        toast.error('Login Failed...')
+        setLoading(false)
+        // Ignore the user simply closing the Google popup.
+        if (error?.code !== "auth/popup-closed-by-user" && error?.code !== "auth/cancelled-popup-request") {
+            toast.error('Login Failed...')
+        }
         console.log("error", error)
     }
 }
   return (
     <div className="bg-grid relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-white via-purple-50 to-green-50 flex items-center justify-center px-6 py-12">
+      {/* Login / redirect loading overlay */}
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-md">
+          <div className="flex flex-col items-center gap-5 rounded-3xl border border-white/60 bg-white/80 px-10 py-9 shadow-2xl shadow-purple-200/50 backdrop-blur-xl">
+            {/* Spinner with breathing brand orb */}
+            <div className="relative flex h-16 w-16 items-center justify-center">
+              <span className="absolute h-16 w-16 rounded-full border-4 border-purple-100 border-t-purple-600 border-r-green-500 animate-spin" />
+              <span className="h-7 w-7 rounded-full bg-gradient-to-br from-purple-500 to-green-500 shadow-lg shadow-purple-300/50 animate-[breathe_2.5s_ease-in-out_infinite]" />
+            </div>
+            <div className="text-center">
+              <p className="text-base font-semibold text-gray-900">Signing you in…</p>
+              <p className="mt-1 text-sm text-gray-500">Setting up your workspace — just a moment.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Floating background glows */}
       <div className="pointer-events-none absolute -top-24 -left-16 h-80 w-80 rounded-full bg-purple-300/30 blur-3xl animate-[float-slow_10s_ease-in-out_infinite]" />
       <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 rounded-full bg-green-300/25 blur-3xl animate-[float-slow_12s_ease-in-out_infinite_1.5s]" />
@@ -110,12 +133,22 @@ const handleLogin = async () => {
 
           <button onClick={handleLogin}
             type="button"
-            className="group mt-8 inline-flex items-center gap-3 rounded-xl bg-gradient-to-r from-purple-600 to-green-500 px-6 py-3.5 text-white font-semibold shadow-lg shadow-purple-300/50 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-purple-300/60 active:translate-y-0"
+            disabled={loading}
+            className="group mt-8 inline-flex items-center gap-3 rounded-xl bg-gradient-to-r from-purple-600 to-green-500 px-6 py-3.5 text-white font-semibold shadow-lg shadow-purple-300/50 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-purple-300/60 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-80 disabled:hover:translate-y-0"
           >
-            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-white shadow-sm">
-              <GoogleIcon />
-            </span>
-            Continue with Google
+            {loading ? (
+              <>
+                <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                Signing in...
+              </>
+            ) : (
+              <>
+                <span className="flex items-center justify-center w-7 h-7 rounded-full bg-white shadow-sm">
+                  <GoogleIcon />
+                </span>
+                Continue with Google
+              </>
+            )}
           </button>
 
           <p className="mt-4 text-sm text-gray-400">

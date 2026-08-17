@@ -25,8 +25,10 @@ const widgetCors = cors({
 app.use("/api/widget", widgetCors, widgetRouter)
 
 // Strict CORS for the authenticated app (cookie/JWT), only the trusted frontend.
+// Uses CLIENT_URL from env in production, falls back to localhost in dev.
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173"
 app.use(cors({
-    origin:"https://novaai-xpbr.onrender.com",
+    origin: CLIENT_URL,
     credentials:true
 }))
 

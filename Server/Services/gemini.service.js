@@ -103,10 +103,9 @@ export const generateReply = async ({ apiKey, systemInstruction, history = [], m
             contents,
             config: {
                 systemInstruction,
-                // Disable the model's "thinking" phase — it's the main source of
-                // latency and unnecessary for short conversational replies.
-                thinkingConfig: { thinkingBudget: 0 },
-                // Cap output so replies stay short and fast.
+                // Cap output so replies stay short and fast. (Note: thinkingConfig
+                // is intentionally omitted — some API keys/projects reject
+                // `thinkingBudget` with 400 INVALID_ARGUMENT.)
                 maxOutputTokens: 200,
             },
         })

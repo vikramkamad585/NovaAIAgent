@@ -10,7 +10,7 @@ const getStripe = () => {
     return stripeClient
 }
 
-const CLIENT_URL = "http://localhost:5173"
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173"
 const PRO_REQUEST_LIMIT = 1000000
 const PRO_DAYS = 90
 const PRO_AMOUNT = 20 // USD

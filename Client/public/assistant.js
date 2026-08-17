@@ -19,11 +19,19 @@
   if (!script) return;
 
   var userId = script.getAttribute("data-user-id");
-  var apiBase = (script.getAttribute("data-api") || "https://novaaiagentserver.onrender.com").replace(/\/$/, "");
   if (!userId) {
     console.warn("[NovaAI] Missing data-user-id on assistant script.");
     return;
   }
+
+  // Derive the API base from where this script is served:
+  // localhost during development, the production server otherwise.
+  var scriptUrl = new URL(script.getAttribute("src") || script.src, window.location.href);
+  var isLocal = scriptUrl.hostname === "localhost" || scriptUrl.hostname === "127.0.0.1";
+  var apiBase = (isLocal
+    ? "http://localhost:8000"
+    : "https://novaaiagentserver.onrender.com"
+  ).replace(/\/$/, "");
 
   // ---- Theme definitions (translated from AssistantPreview.jsx) ----
   var THEMES = {
@@ -311,19 +319,50 @@
     var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     var recognition = null;
     var listening = false;
+    var capturedText = "";   // full transcript captured so far
+    var sendOnEnd = false;   // whether the next `onend` should submit
+    var silenceTimer = null;
+
+    // Auto-finish a short moment after the user stops talking.
+    function armSilenceTimer() {
+      clearTimeout(silenceTimer);
+      silenceTimer = setTimeout(function () {
+        if (listening) finishListening();
+      }, 1500);
+    }
 
     if (SR) {
       recognition = new SR();
       recognition.lang = "en-US";
-      recognition.interimResults = false;
+      recognition.continuous = true;      // keep listening through natural pauses
+      recognition.interimResults = true;  // stream words so we can detect silence
       recognition.maxAlternatives = 1;
+
       recognition.onresult = function (e) {
-        var transcript = e.results[0][0].transcript;
-        stopListening();
-        sendMessage(transcript);
+        // Concatenate every result (final + current interim) into the full phrase.
+        var full = "";
+        for (var i = 0; i < e.results.length; i++) {
+          full += e.results[i][0].transcript + " ";
+        }
+        capturedText = full.replace(/\s+/g, " ").trim();
+        hintEl.textContent = capturedText || "Listening...";
+        armSilenceTimer();
       };
-      recognition.onerror = function () { stopListening(); };
-      recognition.onend = function () { stopListening(); };
+      recognition.onerror = function () { sendOnEnd = false; stopListening(); };
+      recognition.onend = function () {
+        listening = false;
+        micBtn.classList.remove("listening");
+        clearTimeout(silenceTimer);
+        var text = capturedText.trim();
+        capturedText = "";
+        if (sendOnEnd && text) {
+          sendOnEnd = false;
+          sendMessage(text);
+        } else {
+          sendOnEnd = false;
+          if (!busy) { setStatus("", false); hintEl.textContent = "Tap to speak"; }
+        }
+      };
     } else {
       // No speech recognition (e.g. Firefox) — the widget is voice-only.
       micBtn.disabled = true;
@@ -332,6 +371,8 @@
 
     function startListening() {
       if (!recognition || listening || disabled || busy) return;
+      capturedText = "";
+      sendOnEnd = false;
       try {
         recognition.start();
         listening = true;
@@ -340,16 +381,27 @@
         setStatus("Listening...", true);
       } catch (e) {}
     }
+
+    // Stop capturing and submit whatever was heard.
+    function finishListening() {
+      if (!listening) return;
+      sendOnEnd = true;
+      clearTimeout(silenceTimer);
+      try { recognition.stop(); } catch (e) {}
+    }
+
+    // Cancel capturing without submitting (e.g. closing the panel).
     function stopListening() {
-      if (!recognition) return;
+      sendOnEnd = false;
+      clearTimeout(silenceTimer);
       listening = false;
       micBtn.classList.remove("listening");
-      try { recognition.stop(); } catch (e) {}
+      try { if (recognition) recognition.stop(); } catch (e) {}
       if (!busy) { setStatus("", false); hintEl.textContent = "Tap to speak"; }
     }
 
     micBtn.addEventListener("click", function () {
-      if (listening) stopListening();
+      if (listening) finishListening();  // tap again to send immediately
       else startListening();
     });
 
